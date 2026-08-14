@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雅祺的事业工作台 · V1</title>
+<style>
+  :root{
+    --bg:#f6f2ea; --panel:#ffffff; --ink:#33312c; --muted:#8a8378; --line:#e7e0d4;
+    --sidebar:#26302a; --sidebar-ink:#cfd8d1; --sidebar-dim:#7d8b80;
+    --terra:#c2714b; --terra-soft:#f5e6dc;
+    --red:#d65a4a; --orange:#e0934a; --blue:#4a7ba6; --yellow:#c9a227; --green:#5a8c72; --conv:#3f7d5d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+  .topbar{display:flex;align-items:center;gap:16px;padding:12px 22px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;letter-spacing:.5px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--terra);box-shadow:0 0 0 4px var(--terra-soft)}
+  .topdate{color:var(--muted);font-size:12.5px;margin-left:2px}
+  .stats{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;align-items:center;padding:5px 12px;border-radius:10px;background:var(--bg);min-width:60px;border:1px solid var(--line)}
+  .stat b{font-size:16px;line-height:1.1}
+  .stat span{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .topbtns{display:flex;gap:7px;align-items:center}
+  .hamb{display:none;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--line);background:var(--panel);border-radius:9px;font-size:18px;cursor:pointer;color:var(--ink);font-family:inherit;flex-shrink:0}
+  .syncpill{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);padding:5px 10px;border:1px solid var(--line);border-radius:20px;background:var(--panel);white-space:nowrap}
+  .syncpill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .syncpill.syncing .dot{background:var(--blue)}
+  .syncpill.ok .dot{background:var(--green)}
+  .syncpill.err .dot{background:var(--red)}
+  .sidebackdrop{display:none}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:12.5px;transition:.15s;font-family:inherit}
+  .btn:hover{background:var(--bg)}
+  .btn.primary{background:var(--terra);border-color:var(--terra);color:#fff}
+  .btn.primary:hover{background:#b0643f}
+  .btn.ghost{background:transparent}
+  .app{display:flex;flex:1;min-height:0}
+  .sidebar{width:200px;background:var(--sidebar);color:var(--sidebar-ink);flex-shrink:0;padding:16px 11px;display:flex;flex-direction:column;gap:3px;overflow:auto}
+  .navitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;color:var(--sidebar-ink);transition:.15s}
+  .navitem:hover{background:rgba(255,255,255,.06)}
+  .navitem.active{background:var(--terra);color:#fff}
+  .navitem .ic{font-size:15px;width:18px;text-align:center}
+  .navitem .badge{margin-left:auto;background:rgba(255,255,255,.15);border-radius:20px;padding:1px 7px;font-size:11px}
+  .navsep{height:1px;background:rgba(255,255,255,.08);margin:8px 6px}
+  .sidefoot{margin-top:auto;font-size:10.5px;color:var(--sidebar-dim);padding:8px 12px;line-height:1.6}
+  .main{flex:1;min-width:0;overflow:auto;padding:20px 24px 80px}
+  .view{display:none}.view.active{display:block}
+  .viewhead{display:flex;align-items:baseline;gap:11px;margin-bottom:16px;flex-wrap:wrap}
+  .viewhead h2{font-size:18px;font-weight:600}
+  .viewhead p{color:var(--muted);font-size:12.5px}
+  .addbtn{margin-left:auto;border:1px solid var(--terra);color:var(--terra);background:var(--panel);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12.5px;font-family:inherit}
+  .addbtn:hover{background:var(--terra-soft)}
+  .addbtn.ghost{border-color:var(--line);color:var(--muted)}
+  .addbtn.ghost:hover{background:var(--bg)}
+  /* dashboard */
+  .overview{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .ocard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;flex:1;min-width:150px}
+  .ocard .lbl{font-size:12px;color:var(--muted)}
+  .ocard .big{font-size:22px;font-weight:600;margin-top:3px}
+  .ocard.conv .big{color:var(--conv)}
+  .top3{margin-bottom:22px}
+  .top3 h3,.sect h3{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .top3row{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin-bottom:8px}
+  .top3row .pdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .top3row .t{font-size:13.5px;font-weight:500}
+  .top3row .m{margin-left:auto;font-size:12px;color:var(--muted)}
+  .sect{margin-bottom:18px}
+  .grp{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+  .grphead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .grphead .gdot{width:9px;height:9px;border-radius:50%}
+  .grphead .gn{font-size:13px;font-weight:600}
+  .grphead .gc{margin-left:auto;font-size:12px;color:var(--muted)}
+  .tcard{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--gray);border-radius:9px;margin-bottom:8px;background:var(--bg)}
+  .tcard .body{flex:1;min-width:0}
+  .tcard .tt{font-size:13.5px;font-weight:500;margin-bottom:4px}
+  .tcard .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+  .tcard .handle{border:1px solid var(--terra);color:var(--terra);background:var(--panel);padding:5px 11px;border-radius:7px;cursor:pointer;font-size:12px;white-space:nowrap;font-family:inherit}
+  .tcard .handle:hover{background:var(--terra-soft)}
+  .chip{font-size:11px;padding:2px 8px;border-radius:20px;background:#fff;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .empty{color:#bdb6a9;font-size:12px;padding:8px 2px;font-style:italic}
+  /* generic list */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .fbtn{border:1px solid var(--line);background:var(--panel);padding:6px 13px;border-radius:20px;cursor:pointer;font-size:12.5px;color:var(--muted);font-family:inherit}
+  .fbtn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cards{display:grid;gap:11px}
+  .rcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;position:relative}
+  .rcard .rh{display:flex;align-items:flex-start;gap:10px}
+  .rcard .title{font-size:14px;font-weight:600;flex:1;min-width:0;word-break:break-all}
+  .rcard .sub{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.7}
+  .rcard .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+  .rcard .ops{position:absolute;top:11px;right:12px;display:flex;gap:6px}
+  .rcard .ops span{cursor:pointer;color:var(--muted);font-size:13px;opacity:.55}
+  .rcard .ops span:hover{opacity:1;color:var(--terra)}
+  .stag{font-size:11.5px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;font-family:inherit}
+  .stag:hover{border-color:var(--terra)}
+  .p0{color:var(--red);font-weight:600}.p1{color:var(--orange)}.p2{color:var(--blue)}
+  /* cockpit (data dashboard) */
+  .cockpit{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:18px}
+  .cbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .cbox .cl{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .cbox .cv{font-size:24px;font-weight:600}
+  .cbox .cv.conv{color:var(--conv)}
+  .cbox .cu{font-size:11px;color:var(--muted);margin-left:3px;font-size:12px}
+  .milestone{background:#fdf6ec;border:1px solid #f0e0c6;border-radius:10px;padding:10px 13px;margin-top:10px;font-size:13px}
+  .milestone b{color:var(--terra)}
+  .funnel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--muted)}
+  .funnel .ar{color:var(--line)}
+  /* ai center */
+  .aiwrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .aicard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:.15s}
+  .aicard:hover{box-shadow:0 6px 20px rgba(0,0,0,.06);border-color:#d8cdbd}
+  .aicard .ai{font-size:26px;margin-bottom:10px}
+  .aicard h4{font-size:15px;font-weight:600;margin-bottom:6px}
+  .aicard p{font-size:12.5px;color:var(--muted);line-height:1.6}
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(40,35,28,.42);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(2px)}
+  .mask.show{display:flex}
+  .modal{background:var(--panel);border-radius:16px;padding:22px;width:480px;max-width:93vw;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:90vh;overflow:auto}
+  .modal h3{font-size:16px;margin-bottom:14px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--ink)}
+  .field textarea{resize:vertical;min-height:52px}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--terra);background:#fff}
+  .row2{display:flex;gap:10px}.row2 .field{flex:1}
+  .modalbtns{display:flex;gap:9px;justify-content:flex-end;margin-top:6px}
+  .hint{font-size:11px;color:var(--muted);margin-top:3px}
+  /* quick fab */
+  .fab{position:fixed;right:24px;bottom:24px;width:54px;height:54px;border-radius:50%;background:var(--terra);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 6px 18px rgba(194,113,75,.4);z-index:40;font-family:inherit}
+  .fab:hover{background:#b0643f}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;z-index:99;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#d8d0c2;border-radius:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+  @media(max-width:720px){
+    .hamb{display:flex}
+    .topdate{display:none}
+    .brand{font-size:15px}
+    .topbar{gap:9px;padding:9px 12px}
+    .stats{order:5;width:100%;margin-left:0}
+    .topbtns{order:4;margin-left:auto;gap:6px;flex-wrap:wrap}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;width:250px;transform:translateX(-100%);transition:transform .25s ease;z-index:60;box-shadow:4px 0 24px rgba(0,0,0,.18)}
+    body.nav-open .sidebar{transform:translateX(0)}
+    body.nav-open .sidebackdrop{display:block;position:fixed;inset:0;background:rgba(40,35,28,.42);z-index:55}
+    .main{padding:15px 13px 96px}
+    .modal{width:auto;padding:18px}
+    .cockpit,.aiwrap{grid-template-columns:1fr}
+    .viewhead h2{font-size:17px}
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="hamb" id="hamb" aria-label="菜单">☰</button>
+    <div class="brand"><span class="dot"></span>雅祺的事业工作台<span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:3px">V1</span></div>
+    <div class="topdate" id="topDate"></div>
+    <div class="stats" id="stats"></div>
+    <div class="topbtns">
+      <span class="syncpill" id="syncPill" title="同步状态"><span class="dot"></span>本地</span>
+      <button class="btn" id="btnSync">☁ 同步</button>
+      <button class="btn" id="btnExport">导出备份</button>
+      <button class="btn" id="btnImport">导入</button>
+      <input type="file" id="fileInput" accept="application/json" hidden>
+    </div>
+  </div>
+
+  <div class="sidebackdrop" id="sideBackdrop"></div>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="navitem active" data-view="dashboard"><span class="ic">🏠</span><span class="txt">今日指挥台</span><span class="badge" id="navDash">0</span></div>
+      <div class="navitem" data-view="contents"><span class="ic">🎬</span><span class="txt">内容运营中心</span><span class="badge" id="navContent">0</span></div>
+      <div class="navitem" data-view="students"><span class="ic">🎓</span><span class="txt">课程·学员中心</span><span class="badge" id="navStudent">0</span></div>
+      <div class="navitem" data-view="artworks"><span class="ic">🎨</span><span class="txt">艺术作品中心</span><span class="badge" id="navArt">0</span></div>
+      <div class="navitem" data-view="projects"><span class="ic">🚀</span><span class="txt">项目·事业运营</span><span class="badge" id="navProj">0</span></div>
+      <div class="navitem" data-view="book"><span class="ic">📖</span><span class="txt">写书</span><span class="badge" id="navBook">0</span></div>
+      <div class="navsep"></div>
+      <div class="navitem" data-view="knowledge"><span class="ic">🧠</span><span class="txt">知识库</span></div>
+      <div class="navitem" data-view="ai"><span class="options"></span><span class="ic">🤖</span><span class="txt">AI 助手中心</span></div>
+      <div class="sidefoot">数据默认存浏览器本地<br>「☁ 同步」开启后，电脑/手机/团队共享同一份<br>「导出备份」= 数字员工交换协议(JSON)</div>
+    </aside>
+
+    <main class="main">
+      <!-- 今日指挥台 -->
+      <section class="view active" id="view-dashboard">
+        <div class="viewhead"><h2>今日指挥台</h2><p>打开就知道今天该干什么</p></div>
+        <div class="overview" id="overview"></div>
+        <div class="top3">
+          <h3>🔆 今日 TOP 3</h3>
+          <div id="top3list"></div>
+        </div>
+        <div id="dashGroups"></div>
+      </section>
+
+      <!-- 内容运营中心 -->
+      <section class="view" id="view-contents">
+        <div class="viewhead"><h2>内容运营中心</h2><p>一源多发：同一核心观点只存一次，多平台衍生</p>
+          <button class="addbtn" data-add="contents">+ 新建内容</button></div>
+        <div id="cockpit"></div>
+        <div class="filters" id="filterContents"></div>
+        <div class="cards" id="listContents"></div>
+      </section>
+
+      <!-- 课程·学员中心 -->
+      <section class="view" id="view-students">
+        <div class="viewhead"><h2>课程 · 学员中心</h2><p>学员是成长档案，不是普通客户</p>
+          <button class="addbtn" data-add="students">+ 新建学员</button></div>
+        <div class="cards" id="listStudents"></div>
+      </section>
+
+      <!-- 艺术作品中心 -->
+      <section class="view" id="view-artworks">
+        <div class="viewhead"><h2>艺术作品中心</h2><p>创作是独立事业主线</p>
+          <button class="addbtn" data-add="artworks">+ 新建作品</button></div>
+        <div class="filters" id="filterArtworks"></div>
+        <div class="cards" id="listArtworks"></div>
+      </section>
+
+      <!-- 项目·事业运营 -->
+      <section class="view" id="view-projects">
+        <div class="viewhead"><h2>项目 · 事业运营</h2><p>持续推进的事业项目</p>
+          <button class="addbtn" data-add="projects">+ 新建项目</button></div>
+        <div class="cards" id="listProjects"></div>
+      </section>
+
+      <!-- 写书 -->
+      <section class="view" id="view-book">
+        <div class="viewhead"><h2>写书</h2><p>长期创作，不与普通项目混</p>
+          <button class="addbtn" data-add="book">+ 新建章节</button></div>
+        <div class="cards" id="listBook"></div>
+      </section>
+
+      <!-- 知识库 -->
+      <section class="view" id="view-knowledge">
+        <div class="viewhead"><h2>知识库</h2><p>底座：一份信息只存一次，被各处关联</p>
+          <button class="addbtn" data-add="knowledge">+ 新建条目</button>
+          <button class="addbtn ghost" id="btnImportMemory">↓ 导入 AI 记忆</button></div>
+        <div class="filters" id="filterKnowledge"></div>
+        <div class="cards" id="listKnowledge"></div>
+      </section>
+
+      <!-- AI 助手中心 -->
+      <section class="view" id="view-ai">
+        <div class="viewhead"><h2>AI 助手中心</h2><p>4 个高频助手 = 数字员工在工作台的调用点</p></div>
+        <div class="aiwrap" id="aiwrap"></div>
+      </section>
+    </main>
+  </div>
+
+  <button class="fab" id="fab" title="快速记录">＋</button>
+
+  <!-- 通用模态 -->
+  <div class="mask" id="mask"><div class="modal" id="modal">
+    <h3 id="modalTitle">新建</h3>
+    <div id="formFields"></div>
+    <div class="modalbtns">
+      <button class="btn" id="btnCancel">取消</button>
+      <button class="btn primary" id="btnSave">保存</button>
+    </div>
+  </div></div>
+
+  <!-- 导入 AI 记忆 模态 -->
+  <div class="mask" id="importMask"><div class="modal" id="importModal">
+    <h3>导入 AI 记忆 / 外部 Context</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 10px">把 GPT 记忆、Claude Context、或其他 AI 的设定粘贴进来。每行一条；若含「： / : / — / -」会自动拆成「标题｜内容」；也支持直接粘贴 JSON 数组。导入后统一打上「外部导入」标签，不覆盖你已有的条目。</p>
+    <textarea id="importText" style="width:100%;min-height:210px;font-family:inherit;font-size:13px;padding:10px;border:1px solid var(--line);border-radius:8px;resize:vertical" placeholder="例如：&#10;我是艺术疗愈师，深耕亲子艺术疗愈&#10;表达风格：轻松、不严肃，但以完成事情为主&#10;产品：AI觉知圈社群、艺术疗愈课程&#10;教育理念 — 让孩子通过艺术看见自己"></textarea>
+    <div class="modalbtns">
+      <button class="btn" id="importCancel">取消</button>
+      <button class="btn primary" id="importDo">解析并导入</button>
+    </div>
+  </div></div>
+
+  <!-- 同步设置 模态 -->
+  <div class="mask" id="syncMask"><div class="modal" id="syncModal">
+    <h3>☁ 云端同步设置</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px">开启后，数据与 Supabase 云端同步，电脑 / 手机 / 未来团队看同一份。需先建一个免费的 Supabase 项目并建表（步骤见下）。</p>
+    <div class="field"><label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer"><input type="checkbox" id="syncOn" style="width:auto"> 启用云端同步</label></div>
+    <div class="field"><label>Supabase 项目 URL</label><input id="syncUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div class="field"><label>Anon 公开密钥</label><input id="syncAnon" placeholder="eyJhbGciOi..."></div>
+    <div class="field"><label>数据表名</label><input id="syncTable" value="yaqi_workbench"></div>
+    <div class="hint" style="margin-bottom:10px;line-height:1.7">建表 SQL（在 Supabase → SQL Editor 执行）：<br>create table yaqi_workbench (<br>&nbsp;&nbsp;id text primary key,<br>&nbsp;&nbsp;state text,<br>&nbsp;&nbsp;updated_at timestamptz default now()<br>);<br>并开启该表的「Row Level Security」后给 anon 角色增删改权限（或用 Service Key —— 仅自用推荐前者）。</div>
+    <div id="syncMsg" style="font-size:12px;margin-bottom:8px"></div>
+    <div class="modalbtns">
+      <button class="btn" id="syncTest">测试并保存</button>
+      <button class="btn primary" id="syncNow">立即同步</button>
+    </div>
+  </div></div>
+
+  <!-- AI 对话模态 -->
+  <div class="mask" id="aiMask"><div class="modal" id="aiModal">
+    <h3 id="aiTitle">AI 助手</h3>
+    <div id="aiCtx" class="hint" style="margin-bottom:12px"></div>
+    <div class="field"><label>你的输入（想法 / 语音转写 / 原始文字）</label>
+      <textarea id="aiInput" placeholder="例如：今天和一位妈妈聊到孩子不敢画画的卡点…"></textarea></div>
+    <div class="field"><label>工作台带入的上下文</label>
+      <textarea id="aiContext" readonly style="background:#f3f0ea"></textarea></div>
+    <div class="modalbtns">
+      <button class="btn" id="aiCancel">关闭</button>
+      <button class="btn primary" id="aiSend">发送（记入工作台）</button>
+    </div>
+  </div></div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY="yaqi_workbench_v1";
+  var PLATFORMS=["朋友圈","小红书","视频号","公众号","直播","课程","社群"];
+  var CONTENT_FORMS=["朋友圈","小红书","视频号","公众号","直播","课程","社群"];
+  var STATUS={
+    tasks:["今天必须完成","即将截止","可推进","等待回复","已完成"],
+    contents:["灵感","选题","创作中","待发布","已发布","数据记录","复盘","可复用"],
+    artworks:["创作中","已完成","待拍摄","待包装","待发布","待售","已售","参展收藏"],
+    projects:["想法","待启动","进行中","等待","完成","暂停"],
+    book:["灵感池","目录","待写","写作中","初稿完成","修改","定稿"]
+  };
+  var STATUS_COLOR={
+    "今天必须完成":"var(--red)","即将截止":"var(--orange)","可推进":"var(--blue)","等待回复":"var(--yellow)","已完成":"var(--green)",
+    "灵感":"var(--gray)","选题":"var(--blue)","创作中":"var(--orange)","待发布":"var(--red)","已发布":"var(--green)","数据记录":"var(--blue)","复盘":"var(--terra)","可复用":"var(--green)",
+    "创作中":"var(--gray)","已完成":"var(--green)","待拍摄":"var(--orange)","待包装":"var(--blue)","待发布":"var(--red)","待售":"var(--yellow)","已售":"var(--conv)","参展收藏":"var(--conv)",
+    "想法":"var(--gray)","待启动":"var(--yellow)","进行中":"var(--blue)","等待":"var(--orange)","完成":"var(--green)","暂停":"var(--muted)",
+    "灵感池":"var(--gray)","目录":"var(--blue)","待写":"var(--yellow)","写作中":"var(--orange)","初稿完成":"var(--blue)","修改":"var(--terra)","定稿":"var(--green)"
+  };
+  // 表单配置：card=卡片显示字段, fields=编辑字段
+  var FORMS={
+    tasks:{titleKey:"title",card:["ownerModule","project","priority","dueDate","nextAction"],
+      fields:[
+        {k:"title",l:"任务名称",t:"text",req:1},
+        {k:"ownerModule",l:"所属项目/模块",t:"text"},
+        {k:"project",l:"关联项目",t:"text"},
+        {k:"priority",l:"优先级",t:"select",o:["P0","P1","P2"]},
+        {k:"dueDate",l:"截止日期",t:"date"},
+        {k:"status",l:"状态",t:"select",o:STATUS.tasks},
+        {k:"nextAction",l:"下一步行动",t:"text"},
+        {k:"relatedLinks",l:"关联资料(链接/说明)",t:"text"}
+      ]},
+    contents:{titleKey:"title",card:["form","platform","status","publishTime","fans","convert"],
+      fields:[
+        {k:"title",l:"内容标题",t:"text",req:1},
+        {k:"coreIdea",l:"核心观点(同源只存一次)",t:"text"},
+        {k:"form",l:"内容形式",t:"select",o:CONTENT_FORMS},
+        {k:"platform",l:"目标平台",t:"select",o:PLATFORMS},
+        {k:"status",l:"状态",t:"select",o:STATUS.contents},
+        {k:"publishTime",l:"发布时间",t:"date"},
+        {k:"views",l:"阅读/播放",t:"number"},
+        {k:"likes",l:"点赞",t:"number"},
+        {k:"favs",l:"收藏",t:"number"},
+        {k:"comments",l:"评论",t:"number"},
+        {k:"fans",l:"新增粉丝",t:"number"},
+        {k:"convert",l:"成交数",t:"number"},
+        {k:"milestone",l:"涨粉里程碑(如 视频号+1万粉)",t:"text"},
+        {k:"reusable",l:"是否可二次利用",t:"select",o:["否","是"]}
+      ]},
+    students:{titleKey:"name",card:["courseName","courseType","nextSession","currentIssue"],
+      fields:[
+        {k:"name",l:"学员姓名",t:"text",req:1},
+        {k:"age",l:"年龄",t:"number"},
+        {k:"parent",l:"家长",t:"text"},
+        {k:"courseName",l:"课程名称",t:"text"},
+        {k:"courseType",l:"课程类型",t:"text"},
+        {k:"totalSessions",l:"总课时",t:"number"},
+        {k:"doneSessions",l:"已完成课时",t:"number"},
+        {k:"nextSession",l:"下一次课程",t:"date"},
+        {k:"growthGoal",l:"当前成长目标",t:"text"},
+        {k:"interests",l:"兴趣与优势",t:"text"},
+        {k:"currentIssue",l:"当前问题",t:"text"},
+        {k:"nextStrategy",l:"下一步教学策略",t:"text"},
+        {k:"followUp",l:"待跟进",t:"text"}
+      ]},
+    artworks:{titleKey:"name",card:["material","status","price","saleStatus"],
+      fields:[
+        {k:"name",l:"作品名称",t:"text",req:1},
+        {k:"code",l:"作品编号",t:"text"},
+        {k:"createDate",l:"创作日期",t:"date"},
+        {k:"material",l:"材料",t:"text"},
+        {k:"size",l:"尺寸",t:"text"},
+        {k:"status",l:"状态",t:"select",o:STATUS.artworks},
+        {k:"price",l:"价格",t:"text"},
+        {k:"saleStatus",l:"销售状态",t:"text"},
+        {k:"story",l:"创作故事",t:"text"}
+      ]},
+    projects:{titleKey:"name",card:["type","status","priority","dueDate","progress"],
+      fields:[
+        {k:"name",l:"项目名称",t:"text",req:1},
+        {k:"goal",l:"项目目标",t:"text"},
+        {k:"type",l:"项目类型",t:"text"},
+        {k:"status",l:"状态",t:"select",o:STATUS.projects},
+        {k:"priority",l:"优先级",t:"select",o:["P0","P1","P2"]},
+        {k:"startDate",l:"开始日期",t:"date"},
+        {k:"dueDate",l:"截止日期",t:"date"},
+        {k:"progress",l:"当前进度(%)",t:"number"},
+        {k:"nextAction",l:"下一步行动(必填)",t:"text",req:1}
+      ]},
+    book:{titleKey:"title",card:["part","theme","status","wordCount","targetWords"],
+      fields:[
+        {k:"title",l:"章节名称",t:"text",req:1},
+        {k:"part",l:"所属部分",t:"text"},
+        {k:"theme",l:"核心主题",t:"text"},
+        {k:"status",l:"状态",t:"select",o:STATUS.book},
+        {k:"wordCount",l:"当前字数",t:"number"},
+        {k:"targetWords",l:"目标字数",t:"number"},
+        {k:"nextAction",l:"下一步行动",t:"text"}
+      ]},
+    knowledge:{titleKey:"title",card:["category","tags"],
+      fields:[
+        {k:"title",l:"标题",t:"text",req:1},
+        {k:"category",l:"分类",t:"select",o:["事业Context","个人介绍","专业定位","表达风格","艺术疗愈方法","教育理念","产品与服务","课程资料","代表案例","常见问题","内容模板","历史项目","AI Prompt","可复用方法论"]},
+        {k:"content",l:"内容",t:"textarea"},
+        {k:"tags",l:"标签(逗号分隔)",t:"text"}
+      ]}
+  };
+  var AI_ASSISTANTS=[
+    {key:"内容主编",icon:"📝",desc:"一个想法/语音/原始文字 → 核心观点、选题、朋友圈、小红书、视频号口播、公众号方向、是否适合课程/写书"},
+    {key:"教学助理",icon:"🎓",desc:"读取学员档案 → 备课、课程设计、课堂记录、课后复盘、成长观察、下一节建议、家长沟通"},
+    {key:"项目管家",icon:"🚀",desc:"输入一个目标 → 项目目标、关键节点、任务拆解、优先级、截止建议、最重要下一步"},
+    {key:"艺术作品策展助手",icon:"🎨",desc:"作品图+原始感受 → 命名、关键词、解析、自述、展览文字、销售呈现、朋友圈、小红书"}
+  ];
+  var state={tasks:[],contents:[],students:[],artworks:[],projects:[],bookChapters:[],knowledge:[],aiThreads:[]};
+  var current={view:"dashboard",editing:null,filter:null};
+
+  /* ---------- helpers ---------- */
+  function uid(){return "x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+  function pad(n){return n<10?"0"+n:""+n;}
+  function fmtDate(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+  function todayMid(){var d=new Date();d.setHours(0,0,0,0);return d;}
+  function parseDate(s){if(!s)return null;var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+  function diffDays(s){var d=parseDate(s);if(!d)return 99;return Math.round((d-todayMid())/86400000);}
+  function relLabel(s){if(!s)return "";var n=diffDays(s);if(n<0)return "逾期"+(-n)+"天";if(n===0)return "今天";if(n===1)return "明天";if(n<=3)return n+"天后";return s;}
+  function esc(s){return (s==null?"":(""+s)).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function num(v){v=+v;return isNaN(v)?0:v;}
+  function getTable(kind){return kind==="book"?"bookChapters":kind;}
+  function toast(m){var e=document.getElementById("toast");e.textContent=m;e.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){e.classList.remove("show");},1900);}
+
+  /* ---------- storage：本地优先 + 可选云端同步 ---------- */
+  var CFGKEY="yaqi_cfg_v1";
+  function loadCfg(){try{return JSON.parse(localStorage.getItem(CFGKEY))||{sync:{enabled:false,url:"",anon:"",table:"yaqi_workbench"}};}catch(e){return {sync:{enabled:false,url:"",anon:"",table:"yaqi_workbench"}};}}
+  function saveCfg(c){try{localStorage.setItem(CFGKEY,JSON.stringify(c));}catch(e){}}
+  var cfg=loadCfg();
+  var sbClient=null;
+  function ensureSb(){
+    if(sbClient)return sbClient;
+    if(!cfg.sync.enabled||!cfg.sync.url||!cfg.sync.anon)return null;
+    if(typeof supabase==="undefined")return null; // CDN 尚未加载
+    try{sbClient=supabase.createClient(cfg.sync.url,cfg.sync.anon);}catch(e){sbClient=null;}
+    return sbClient;
+  }
+  function load(){
+    var had=false;
+    try{var r=localStorage.getItem(KEY);if(r){state=JSON.parse(r);had=true;}}catch(e){}
+    if(!had){seed();saveLocal();}
+    if(cfg.sync.enabled){setSync("syncing","同步中");cloudPull();}else{setSync("","本地");}
+  }
+  function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){toast("本地保存失败："+e.message);}}
+  var saveTimer=null;
+  function save(){
+    saveLocal();
+    if(cfg.sync.enabled){clearTimeout(saveTimer);saveTimer=setTimeout(cloudPush,700);}
+  }
+  function setSync(cls,txt){var p=document.getElementById("syncPill");if(!p)return;p.className="syncpill"+(cls?" "+cls:"");p.innerHTML='<span class="dot"></span>'+txt;}
+  function cloudPull(){
+    setSync("syncing","同步中");
+    if(typeof supabase==="undefined"){loadSbScript(function(){doPull();});return;}
+    doPull();
+  }
+  function doPull(){
+    var sb=ensureSb();if(!sb){setSync("err","未连接");return;}
+    sb.from(cfg.sync.table).select("state,updated_at").eq("id","main").single().then(function(res){
+      if(res.error){if(res.error.code==="PGRST116"){cloudPush();return;}setSync("err","拉取失败");toast("云端拉取失败："+res.error.message);return;}
+      if(res.data&&res.data.state){try{state=JSON.parse(res.data.state);saveLocal();render();setSync("ok","已同步");}catch(e){setSync("err","数据异常");}}
+      else{cloudPush();}
+    }).catch(function(e){setSync("err","网络错误");});
+  }
+  function cloudPush(){
+    setSync("syncing","同步中");
+    if(typeof supabase==="undefined"){loadSbScript(function(){doPush();});return;}
+    doPush();
+  }
+  function doPush(){
+    var sb=ensureSb();if(!sb){setSync("err","未连接");return;}
+    sb.from(cfg.sync.table).upsert({id:"main",state:JSON.stringify(state),updated_at:new Date().toISOString()}).then(function(res){
+      if(res.error){setSync("err","推送失败");toast("云端推送失败："+res.error.message);}else{setSync("ok","已同步");}
+    }).catch(function(e){setSync("err","网络错误");});
+  }
+
+  function seed(){
+    var t=fmtDate(todayMid()),y=fmtDate(new Date(todayMid().getTime()-86400000)),p1=fmtDate(new Date(todayMid().getTime()+86400000)),p2=fmtDate(new Date(todayMid().getTime()+2*86400000));
+    state.tasks=[
+      {id:uid(),title:"录制本周课程第3节",ownerModule:"课程",project:"艺术疗愈系统课",priority:"P0",dueDate:t,status:"今天必须完成",nextAction:"今晚20:00前完成录制并上传",relatedLinks:"学员档案"},
+      {id:uid(),title:"回复社群高价值答疑",ownerModule:"社群·AI觉知圈",project:"",priority:"P2",dueDate:t,status:"今天必须完成",nextAction:"挑3条高价值问题认真回",relatedLinks:""},
+      {id:uid(),title:"视频号·AI时代的新机会 脚本",ownerModule:"内容",project:"",priority:"P1",dueDate:t,status:"可推进",nextAction:"今晚出脚本初稿",relatedLinks:""},
+      {id:uid(),title:"梳理重点持仓季报要点",ownerModule:"投资研究",project:"",priority:"P0",dueDate:p2,status:"即将截止",nextAction:"读季报提取3个可聊点",relatedLinks:""},
+      {id:uid(),title:"公众号·行业深度长文",ownerModule:"内容",project:"",priority:"P1",dueDate:p1,status:"即将截止",nextAction:"今晚初稿明早排版",relatedLinks:"写书素材"}
+    ];
+    state.contents=[
+      {id:uid(),title:"视频号·艺术疗愈如何帮孩子表达情绪",coreIdea:"艺术是孩子安全的情绪出口",form:"视频号",platform:"视频号",status:"已发布",publishTime:y,views:12000,likes:860,favs:430,comments:210,fans:120,milestone:"视频号+1万粉 里程碑达成",convert:2,reusable:"是"},
+      {id:uid(),title:"小红书·妈妈必看：3个家庭艺术游戏",coreIdea:"家庭艺术游戏促进亲子连接",form:"小红书",platform:"小红书",status:"已发布",publishTime:y,views:8600,likes:1200,favs:980,comments:150,fans:64,convert:3,reusable:"是"},
+      {id:uid(),title:"视频号·AI时代普通人的机会",coreIdea:"AI降低创作门槛",form:"视频号",platform:"视频号",status:"创作中",publishTime:"",views:0,likes:0,favs:0,comments:0,fans:0,convert:0,reusable:"否"},
+      {id:uid(),title:"公众号·艺术疗愈行业深度长文",coreIdea:"行业现状与趋势",form:"公众号",platform:"公众号",status:"待发布",publishTime:p1,views:0,likes:0,favs:0,comments:0,fans:0,convert:0,reusable:"否"}
+    ];
+    state.students=[
+      {id:uid(),name:"小宇",age:7,parent:"王女士",courseName:"亲子艺术疗愈",courseType:"1对1",totalSessions:12,doneSessions:5,nextSession:p1,growthGoal:"敢于自由表达",interests:"画画、恐龙",currentIssue:"不敢下笔",nextStrategy:"用无错线条游戏破冰",followUp:"同步家长沟通话术"}
+    ];
+    state.artworks=[
+      {id:uid(),name:"《呼吸的蓝》",code:"A-024",createDate:y,material:"综合材料",size:"60x80",status:"已完成",price:"¥3,800",saleStatus:"待售",story:"关于情绪流动的探索"}
+    ];
+    state.projects=[
+      {id:uid(),name:"医院艺术疗愈合作",goal:"落地首个院企合作",type:"合作",status:"进行中",priority:"P1",startDate:y,dueDate:p2,progress:40,nextAction:"本周出合作方案初稿"}
+    ];
+    state.bookChapters=[
+      {id:uid(),title:"第一章 为什么孩子需要艺术疗愈",part:"第一部分 看见",theme:"艺术疗愈的价值",status:"写作中",wordCount:3200,targetWords:6000,nextAction:"补充2个学员案例"}
+    ];
+    state.knowledge=[
+      {id:uid(),title:"我的事业公开版 Context",category:"事业Context",content:"艺术疗愈师×教育人，围绕艺术×疗愈×教育×AI，服务孩子与妈妈。",tags:"定位,AI觉知圈"},
+      {id:uid(),title:"亲子艺术疗愈方法论",category:"可复用方法论",content:"无错线条→自由表达→情绪命名→作品对话，四步法。",tags:"疗愈,亲子"}
+    ];
+    state.aiThreads=[];
+  }
+
+  /* ---------- dashboard ---------- */
+  function collectToday(){
+    var out=[];
+    state.tasks.forEach(function(t){if(t.status!=="已完成")out.push({title:t.title,kind:"tasks",id:t.id,status:t.status,priority:t.priority,dueDate:t.dueDate,nextAction:t.nextAction,owner:t.ownerModule,sub:t.project});});
+    state.contents.forEach(function(c){if(["灵感","选题","创作中","待发布"].indexOf(c.status)>=0&&c.dueDate)out.push({title:c.title,kind:"contents",id:c.id,status:taskStatusFromDue(c.dueDate),priority:"P2",dueDate:c.dueDate,nextAction:"推进「"+c.status+"」",owner:"内容",sub:c.platform});});
+    state.projects.forEach(function(p){if(p.dueDate&&p.status!=="完成"&&p.status!=="暂停")out.push({title:p.name,kind:"projects",id:p.id,status:taskStatusFromDue(p.dueDate),priority:p.priority,dueDate:p.dueDate,nextAction:p.nextAction,owner:"项目",sub:p.type});});
+    state.students.forEach(function(s){if(s.nextSession)out.push({title:"备课/上课："+s.name,sort:s.nextSession,kind:"students",id:s.id,status:taskStatusFromDue(s.nextSession),priority:"P1",dueDate:s.nextSession,nextAction:"准备「"+s.growthGoal+"」课程",owner:"学员",sub:s.courseName});});
+    state.bookChapters.forEach(function(b){if(["待写","写作中"].indexOf(b.status)>=0)out.push({title:"写书："+b.title,kind:"book",id:b.id,status:"可推进",priority:"P2",dueDate:"",nextAction:b.nextAction,owner:"写书",sub:b.part});});
+    return out;
+  }
+  function taskStatusFromDue(d){var n=diffDays(d);if(n<0)return "今天必须完成";if(n===0)return "今天必须完成";if(n<=3)return "即将截止";return "可推进";}
+
+  function renderDashboard(){
+    var items=collectToday();
+    var open=items.filter(function(i){return i.status!=="已完成";});
+    var must=open.filter(function(i){return i.status==="今天必须完成";}).length;
+    var soon=open.filter(function(i){return i.status==="即将截止";}).length;
+    // 获客概览：本周 contents 新增粉丝与成交
+    var wkFans=0,wkConv=0;
+    state.contents.forEach(function(c){if(c.publishTime&&diffDays(c.publishTime)>=-7){wkFans+=num(c.fans);wkConv+=num(c.convert);}});
+    document.getElementById("overview").innerHTML=
+      card("今日待办",open.length,"var(--ink)")+
+      card("今天必须",must,"var(--red)")+
+      card("即将截止",soon,"var(--orange)")+
+      card("本周获客 +粉",wkFans,"var(--conv)")+
+      card("本周转化",wkConv+" 单","var(--conv)");
+    // TOP3 = 必须 + 即将 前3
+    var top=open.filter(function(i){return i.status==="今天必须完成"||i.status==="即将截止";}).slice(0,3);
+    if(top.length===0)top=open.slice(0,3);
+    var pcolor={P0:"var(--red)",P1:"var(--orange)",P2:"var(--blue)"};
+    document.getElementById("top3list").innerHTML=top.map(function(i){
+      return '<div class="top3row"><span class="pdot" style="background:'+(pcolor[i.priority]||"var(--gray)")+'"></span><span class="t">'+esc(i.title)+'</span><span class="m">'+(i.owner||"")+(i.dueDate?" · "+relLabel(i.dueDate):"")+'</span></div>';
+    }).join("")||'<div class="empty">今天很清爽，没有必须做的事 ✨</div>';
+    // 五态分组
+    var groups=[
+      {key:"今天必须完成",name:"今天必须完成",color:"var(--red)"},
+      {key:"即将截止",name:"即将截止",color:"var(--orange)"},
+      {key:"可推进",name:"今天可以推进",color:"var(--blue)"},
+      {key:"等待回复",name:"等待回复 / 需要跟进",color:"var(--yellow)"},
+      {key:"已完成",name:"已完成",color:"var(--green)"}
+    ];
+    var html="";
+    groups.forEach(function(g){
+      var gs=items.filter(function(i){return i.status===g.key;});
+      html+='<div class="sect"><div class="grp"><div class="grphead"><span class="gdot" style="background:'+g.color+'"></span><span class="gn">'+g.name+'</span><span class="gc">'+gs.length+'</span></div>';
+      if(gs.length===0)html+='<div class="empty">— 空 —</div>';
+      gs.forEach(function(i){html+=taskCard(i);});
+      html+='</div></div>';
+    });
+    document.getElementById("dashGroups").innerHTML=html;
+    bindDashHandlers();
+  }
+  function card(l,v,c){return '<div class="ocard"><div class="lbl">'+l+'</div><div class="big" style="color:'+c+'">'+v+'</div></div>';}
+  function taskCard(i){
+    var pcls={P0:"p0",P1:"p1",P2:"p2"}[i.priority]||"";
+    return '<div class="tcard" style="border-left-color:'+(i.status==="今天必须完成"?"var(--red)":i.status==="即将截止"?"var(--orange)":i.status==="可推进"?"var(--blue)":i.status==="等待回复"?"var(--yellow)":"var(--green)")+'">'+
+      '<div class="body"><div class="tt">'+esc(i.title)+'</div>'+
+      '<div class="meta">'+(i.owner?'<span class="chip">'+esc(i.owner)+'</span>':'')+(i.priority?'<span class="chip '+pcls+'">'+i.priority+'</span>':'')+(i.dueDate?'<span>'+relLabel(i.dueDate)+'</span>':'')+(i.sub?'<span class="chip">'+esc(i.sub)+'</span>':'')+'</div>'+
+      (i.nextAction?'<div class="meta" style="margin-top:5px;color:var(--ink)">➡ '+esc(i.nextAction)+'</div>':'')+'</div>'+
+      '<button class="handle" data-go="'+i.kind+'" data-id="'+i.id+'">处理</button></div>';
+  }
+  function bindDashHandlers(){
+    document.querySelectorAll("#dashGroups .handle").forEach(function(b){
+      b.onclick=function(){
+        var kind=b.dataset.go,id=b.dataset.id;
+        switchView(kind==="tasks"?"dashboard":kind);
+        setTimeout(function(){openModal(kind,findById(kind,id));},60);
+      };
+    });
+  }
+
+  /* ---------- generic list render ---------- */
+  function renderList(kind){
+    var cfg=FORMS[kind];var arr=state[getTable(kind)];
+    if(current.filter&&current.filter.kind===kind&&current.filter.val){arr=arr.filter(function(o){return o[current.filter.field]===current.filter.val;});}
+    var box=document.getElementById("list"+cap(kind));
+    if(!box)return;
+    var html="";
+    arr.forEach(function(o){
+      var title=o[cfg.titleKey]||"(未命名)";
+      var st=o.status?('<span class="stag" data-stkind="'+kind+'" data-id="'+o.id+'">'+esc(o.status)+'</span>'):"";
+      var chips=cfg.card.filter(function(k){return k!=="status"&&o[k]!=null&&o[k]!=="";}).map(function(k){
+        var v=o[k];if(k==="dueDate"||k==="nextSession"||k==="publishTime"||k==="createDate")v=relLabel(v);
+        return '<span class="chip">'+esc(""+v)+'</span>';
+      }).join("");
+      var pri="";if(o.priority)pri='<span class="chip '+(o.priority==="P0"?"p0":o.priority==="P1"?"p1":"p2")+'">'+o.priority+'</span>';
+      html+='<div class="rcard"><div class="ops"><span data-edit="'+kind+'" data-id="'+o.id+'">✎</span><span data-del="'+kind+'" data-id="'+o.id+'">✕</span></div>'+
+        '<div class="rh"><div><div class="title">'+esc(title)+'</div></div></div>'+
+        '<div class="row">'+st+pri+chips+'</div></div>';
+    });
+    box.innerHTML=html||'<div class="empty">还没有内容，点右上角「+ 新建」开始</div>';
+    bindListHandlers(kind);
+  }
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+  function bindListHandlers(kind){
+    var box=document.getElementById("list"+cap(kind));
+    box.querySelectorAll("[data-del]").forEach(function(el){el.onclick=function(){del(kind,el.dataset.id);};});
+    box.querySelectorAll("[data-edit]").forEach(function(el){el.onclick=function(){openModal(kind,findById(kind,el.dataset.id));};});
+    box.querySelectorAll("[data-stkind]").forEach(function(el){el.onclick=function(){
+      var id=el.dataset.id;var o=findById(kind,id);if(!o)return;
+      var opts=STATUS[kind];if(!opts)return;
+      var idx=opts.indexOf(o.status);o.status=opts[(idx+1)%opts.length];save();render();toast("状态 → "+o.status);
+    };});
+  }
+  function del(kind,id){var t=getTable(kind);state[t]=state[t].filter(function(o){return o.id!==id;});save();render();toast("已删除");}
+  function findById(kind,id){return state[getTable(kind)].filter(function(o){return o.id===id;})[0];}
+
+  /* ---------- content cockpit ---------- */
+  function renderCockpit(){
+    var box=document.getElementById("cockpit");if(!box)return;
+    var plats=["小红书","视频号"];
+    var html='<div class="cockpit">';
+    plats.forEach(function(p){
+      var arr=state.contents.filter(function(c){return c.platform===p;});
+      var fans=0,conv=0,views=0,likes=0,posts=arr.length;
+      arr.forEach(function(c){fans+=num(c.fans);conv+=num(c.convert);views+=num(c.views);likes+=num(c.likes);});
+      var ms=arr.filter(function(c){return c.milestone;}).map(function(c){return c.milestone;});
+      html+='<div class="cbox"><div class="cl">'+p+' · 内容 '+posts+' 条</div>'+
+        '<div><span class="cv">'+fans+'</span><span class="cu">新增粉</span></div>'+
+        '<div style="margin-top:6px"><span class="cv conv">'+conv+'</span><span class="cu">成交</span></div>'+
+        '<div class="funnel">曝光 '+views+' · 赞 '+likes+'</div>'+
+        (ms.length?'<div class="milestone">🏅 <b>'+esc(ms.join("；"))+'</b></div>':'')+
+        '</div>';
+    });
+    // 转化漏斗汇总（全部）
+    var tf=0,ti=0,tc=0;
+    state.contents.forEach(function(c){tf+=num(c.fans);ti+=num(c.convert);});
+    html+='<div class="cbox"><div class="cl">全平台转化漏斗</div>'+
+      '<div class="funnel">曝光 <b>'+sumViews()+'</b> <span class="ar">→</span> 新增粉 <b>'+tf+'</b> <span class="ar">→</span> 成交 <b style="color:var(--conv)">'+ti+'</b></div>'+
+      '<div class="hint" style="margin-top:8px">曝光→互动→咨询→加微→成交，逐步记录即可看转化</div></div>';
+    html+='</div>';
+    box.innerHTML=html;
+  }
+  function sumViews(){var s=0;state.contents.forEach(function(c){s+=num(c.views);});return s;}
+
+  /* ---------- AI center ---------- */
+  function renderAI(){
+    var box=document.getElementById("aiwrap");if(!box)return;
+    box.innerHTML=AI_ASSISTANTS.map(function(a){
+      return '<div class="aicard" data-ai="'+a.key+'"><div class="ai">'+a.icon+'</div><h4>'+a.key+'</h4><p>'+esc(a.desc)+'</p></div>';
+    }).join("");
+    box.querySelectorAll("[data-ai]").forEach(function(el){el.onclick=function(){openAI(el.dataset.ai);};});
+  }
+  function openAI(key){
+    document.getElementById("aiTitle").textContent="🤖 "+key;
+    document.getElementById("aiInput").value="";
+    // 带入上下文：知识库摘要 + 当前各模块数量
+    var ctx="【工作台上下文】\n知识库 "+state.knowledge.length+" 条 · 学员 "+state.students.length+" 人 · 内容 "+state.contents.length+" 条 · 项目 "+state.projects.length+" 个 · 写书章节 "+state.bookChapters.length+" 章\n";
+    if(state.knowledge.length){ctx+="\n代表性知识：\n"+state.knowledge.slice(0,3).map(function(k){return "- "+k.title+"："+ (k.content||"").slice(0,40);}).join("\n");}
+    document.getElementById("aiContext").value=ctx;
+    document.getElementById("aiMask").classList.add("show");
+    document.getElementById("aiMask").dataset.ai=key;
+  }
+  document.getElementById("aiCancel").onclick=function(){document.getElementById("aiMask").classList.remove("show");};
+  document.getElementById("aiSend").onclick=function(){
+    var key=document.getElementById("aiMask").dataset.ai;
+    var input=document.getElementById("aiInput").value.trim();
+    if(!input){toast("先输入点什么吧");return;}
+    state.aiThreads.push({id:uid(),assistant:key,input:input,sourceContext:"工作台上下文",createdAt:fmtDate(todayMid())});
+    save();document.getElementById("aiMask").classList.remove("show");
+    toast("已记入工作台 · 可在 WorkBuddy 中让数字员工执行");
+  };
+
+  /* ---------- modal ---------- */
+  var mask=document.getElementById("mask");
+  function openModal(kind,obj){
+    current.editing={kind:kind,id:obj?obj.id:null};
+    var cfg=FORMS[kind];
+    document.getElementById("modalTitle").textContent=(obj?"编辑":"新建")+(kindName(kind));
+    var html="";
+    cfg.fields.forEach(function(f){
+      var val=obj?obj[f.k]:"";
+      html+='<div class="field"><label>'+f.l+(f.req?' <span style="color:var(--red)">*</span>':'')+'</label>';
+      if(f.t==="select"){
+        html+='<select data-k="'+f.k+'">'+f.o.map(function(o){return '<option'+(o==val?" selected":"")+'>'+esc(o)+'</option>';}).join("")+'</select>';
+      }else if(f.t==="textarea"){
+        html+='<textarea data-k="'+f.k+'">'+esc(val)+'</textarea>';
+      }else{
+        html+='<input type="'+(f.t==="number"?"number":"text")+'" data-k="'+f.k+'" value="'+esc(val)+'">';
+      }
+      html+='</div>';
+    });
+    document.getElementById("formFields").innerHTML=html;
+    mask.classList.add("show");
+  }
+  function kindName(k){return {tasks:"行动",contents:"内容",students:"学员",artworks:"作品",projects:"项目",book:"章节",knowledge:"知识"}[k]||"";}
+  function closeModal(){mask.classList.remove("show");current.editing=null;}
+  document.getElementById("btnCancel").onclick=closeModal;
+  mask.addEventListener("click",function(e){if(e.target===mask)closeModal();});
+  document.getElementById("btnSave").onclick=function(){
+    if(!current.editing)return;
+    var kind=current.editing.kind,cfg=FORMS[kind];
+    var titleField=cfg.fields.filter(function(f){return f.req;})[0]||cfg.fields[0];
+    var titleVal=document.querySelector('#formFields [data-k="'+titleField.k+'"]').value.trim();
+    if(!titleVal){toast("请填写："+titleField.l);return;}
+    var obj={};if(current.editing.id)obj=findById(kind,current.editing.id);
+    cfg.fields.forEach(function(f){
+      var el=document.querySelector('#formFields [data-k="'+f.k+'"]');
+      var v=el?el.value:"";
+      if(f.t==="number")v=num(v);
+      obj[f.k]=v;
+    });
+    if(!obj.id)obj.id=uid();
+    var tk=getTable(kind);
+    if(!state[tk].some(function(o){return o.id===obj.id;}))state[tk].push(obj);
+    save();render();closeModal();toast("已保存");
+  };
+
+  /* ---------- filters (contents/artworks/knowledge) ---------- */
+  function renderFilters(){
+    buildFilter("filterContents","contents","platform",PLATFORMS.concat(["全部"]));
+    buildFilter("filterArtworks","artworks","status",STATUS.artworks.concat(["全部"]));
+    buildFilter("filterKnowledge","knowledge","category",["事业Context","个人介绍","专业定位","表达风格","艺术疗愈方法","教育理念","产品与服务","课程资料","代表案例","常见问题","内容模板","历史项目","AI Prompt","可复用方法论","全部"]);
+  }
+  function buildFilter(elId,kind,field,opts){
+    var el=document.getElementById(elId);if(!el)return;
+    el.innerHTML=opts.map(function(o){return '<span class="fbtn'+(current.filter&&current.filter.kind===kind&&current.filter.field===field&&current.filter.val===o?' active':'')+'" data-fkind="'+kind+'" data-ffield="'+field+'" data-fval="'+o+'">'+o+'</span>';}).join("");
+    el.querySelectorAll("[data-fkind]").forEach(function(b){b.onclick=function(){
+      current.filter={kind:kind,field:field,val:b.dataset.fval==="全部"?null:b.dataset.fval};render();
+    };});
+  }
+
+  /* ---------- nav ---------- */
+  function switchView(v){
+    current.view=v;
+    document.querySelectorAll(".navitem").forEach(function(n){n.classList.toggle("active",n.dataset.view===v);});
+    document.querySelectorAll(".view").forEach(function(s){s.classList.toggle("active",s.id==="view-"+v);});
+  }
+  document.querySelectorAll(".navitem[data-view]").forEach(function(n){n.onclick=function(){switchView(n.dataset.view);document.body.classList.remove("nav-open");};});
+  document.querySelectorAll("[data-add]").forEach(function(b){b.onclick=function(){openModal(b.dataset.add,null);};});
+
+  /* ---------- import/export ---------- */
+  document.getElementById("btnExport").onclick=function(){
+    var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="yaqi-workbench-"+fmtDate(todayMid())+".json";a.click();URL.revokeObjectURL(a.href);
+    toast("已导出 JSON（= 数字员工交换协议）");
+  };
+  document.getElementById("btnImport").onclick=function(){document.getElementById("fileInput").click();};
+  document.getElementById("fileInput").onchange=function(e){
+    var f=e.target.files[0];if(!f)return;var r=new FileReader();
+    r.onload=function(){try{var d=JSON.parse(r.result);if(!d.tasks)throw new Error("文件格式不对");state=d;save();render();toast("已导入数据");}catch(err){toast("导入失败："+err.message);}};
+    r.readAsText(f);e.target.value="";
+  };
+
+  /* ---------- 导入 AI 记忆 / 外部 Context ---------- */
+  document.getElementById("btnImportMemory").onclick=function(){
+    document.getElementById("importText").value="";
+    document.getElementById("importMask").classList.add("show");
+  };
+  document.getElementById("importCancel").onclick=function(){document.getElementById("importMask").classList.remove("show");};
+  document.getElementById("importMask").addEventListener("click",function(e){if(e.target===document.getElementById("importMask"))document.getElementById("importMask").classList.remove("show");});
+  document.getElementById("importDo").onclick=function(){
+    var raw=document.getElementById("importText").value.trim();
+    if(!raw){toast("先粘贴内容");return;}
+    var items=[];
+    // 1) 尝试 JSON（数组 / 对象）
+    if(raw[0]==="["||raw[0]==="{"){
+      try{
+        var j=JSON.parse(raw);
+        if(Array.isArray(j)){
+          j.forEach(function(x){
+            if(typeof x==="string"){items.push(splitLine(x));}
+            else if(x&&typeof x==="object"){items.push({title:(x.title||x.name||"").toString(),content:(x.content||x.value||x.text||"").toString(),category:(x.category||"").toString(),tags:(x.tags||"").toString()});}
+          });
+        }else{
+          Object.keys(j).forEach(function(k){items.push({title:k,content:String(j[k])});});
+        }
+      }catch(err){/* 不是合法 JSON：保持 items 为空，下方纯文本分支兜底 */}
+    }
+    // 2) 纯文本：逐行解析
+    if(!items.length){
+      raw.split(/\r?\n+/).forEach(function(line){line=line.trim();if(line)items.push(splitLine(line));});
+    }
+    if(!items.length){toast("没解析出内容");return;}
+    items.forEach(function(it){
+      state.knowledge.push({
+        id:uid(),
+        title:(it.title||"").slice(0,60)||"未命名条目",
+        category:it.category||guessCategory(it.title||"",it.content||""),
+        content:it.content||"",
+        tags:"外部导入"+(it.tags?", "+it.tags:"")
+      });
+    });
+    save();render();
+    document.getElementById("importMask").classList.remove("show");
+    toast("已导入 "+items.length+" 条到知识库");
+  };
+  function splitLine(line){
+    var m=line.match(/^(.*?)[：:—-]\s*(.*)$/);
+    if(m&&m[2]&&m[2].trim())return {title:m[1].trim().slice(0,40),content:m[2].trim()};
+    if(line.length<=40)return {title:line,content:""};
+    return {title:line.slice(0,40)+"…",content:line};
+  }
+  function guessCategory(title,content){
+    content=content||"";var full=(title||"")+" "+(content||"");
+    // 第一遍：标题优先（"X：Y" 形式里 X 常就是分类名）
+    if(/prompt|提示词|提示/.test(title))return "AI Prompt";
+    if(/定位|专业|身份|我是|职业/.test(title))return "专业定位";
+    if(/风格|表达|语气|口吻/.test(title))return "表达风格";
+    if(/产品|服务|课程|社群|价格|收费/.test(title))return "产品与服务";
+    if(/疗愈|治疗|艺术治疗|心理/.test(title))return "艺术疗愈方法";
+    if(/教育|教学|理念|孩子|亲子|学生/.test(title))return "教育理念";
+    if(/案例|学员|客户|用户/.test(title))return "代表案例";
+    if(/模板|框架|结构/.test(title))return "内容模板";
+    if(/方法|方法论|流程|sop|步骤/i.test(title))return "可复用方法论";
+    if(/介绍|简历|关于我|背景/.test(title))return "个人介绍";
+    // 第二遍：标题无明确信号，再看完整文本
+    if(/prompt|提示词|提示/.test(full))return "AI Prompt";
+    if(/定位|专业|身份|我是|职业/.test(full))return "专业定位";
+    if(/风格|表达|语气|口吻/.test(full))return "表达风格";
+    if(/产品|服务|课程|社群|价格|收费/.test(full))return "产品与服务";
+    if(/疗愈|治疗|艺术治疗|心理/.test(full))return "艺术疗愈方法";
+    if(/教育|教学|理念|孩子|亲子|学生/.test(full))return "教育理念";
+    if(/案例|学员|客户|用户/.test(full))return "代表案例";
+    if(/模板|框架|结构/.test(full))return "内容模板";
+    if(/方法|方法论|流程|sop|步骤/i.test(full))return "可复用方法论";
+    if(/介绍|简历|关于我|背景/.test(full))return "个人介绍";
+    return "事业Context";
+  }
+
+  /* ---------- 同步设置 ---------- */
+  function loadSbScript(cb){
+    if(typeof supabase!=="undefined"){cb(true);return;}
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    s.onload=function(){cb(true);};
+    s.onerror=function(){cb(false);};
+    document.head.appendChild(s);
+  }
+  document.getElementById("btnSync").onclick=function(){
+    document.getElementById("syncUrl").value=cfg.sync.url||"";
+    document.getElementById("syncAnon").value=cfg.sync.anon||"";
+    document.getElementById("syncTable").value=cfg.sync.table||"yaqi_workbench";
+    document.getElementById("syncOn").checked=!!cfg.sync.enabled;
+    var m=document.getElementById("syncMsg");m.textContent="";m.style.color="var(--muted)";
+    document.getElementById("syncMask").classList.add("show");
+  };
+  document.getElementById("syncMask").addEventListener("click",function(e){if(e.target===document.getElementById("syncMask"))document.getElementById("syncMask").classList.remove("show");});
+  document.getElementById("syncTest").onclick=function(){
+    var url=document.getElementById("syncUrl").value.trim();
+    var anon=document.getElementById("syncAnon").value.trim();
+    var table=document.getElementById("syncTable").value.trim()||"yaqi_workbench";
+    var on=document.getElementById("syncOn").checked;
+    var m=document.getElementById("syncMsg");m.style.color="var(--muted)";
+    if(on&&(!url||!anon)){m.textContent="启用同步需填写 URL 与密钥";m.style.color="var(--red)";return;}
+    cfg={sync:{enabled:on,url:url,anon:anon,table:table}};saveCfg(cfg);sbClient=null;
+    if(!on){m.textContent="已保存（同步关闭，仅本地）";setSync("","本地");return;}
+    m.textContent="正在连接…";
+    loadSbScript(function(ok){
+      if(!ok){m.textContent="无法加载 Supabase 库（请检查网络）";m.style.color="var(--red)";return;}
+      var sb=ensureSb();
+      if(!sb){m.textContent="客户端初始化失败";m.style.color="var(--red)";return;}
+      sb.from(table).select("id").eq("id","main").single().then(function(res){
+        if(res.error&&res.error.code!=="PGRST116"){m.textContent="连接失败："+res.error.message;m.style.color="var(--red)";return;}
+        m.textContent="连接成功 ✓ 已保存，开始同步";m.style.color="var(--green)";cloudPull();
+      }).catch(function(e){m.textContent="连接失败："+e.message;m.style.color="var(--red)";});
+    });
+  };
+  document.getElementById("syncNow").onclick=function(){
+    if(!cfg.sync.enabled){toast("请先启用同步并测试");return;}
+    cloudPush();toast("已触发同步");
+  };
+
+  /* ---------- 手机抽屉导航 ---------- */
+  document.getElementById("hamb").onclick=function(){document.body.classList.toggle("nav-open");};
+  document.getElementById("sideBackdrop").onclick=function(){document.body.classList.remove("nav-open");};
+
+  document.getElementById("fab").onclick=function(){openModal("tasks",null);};
+
+  /* ---------- render all ---------- */
+  function render(){
+    document.getElementById("topDate").textContent=fmtDate(todayMid())+" · 南京";
+    // nav badges
+    document.getElementById("navDash").textContent=collectToday().filter(function(i){return i.status!=="已完成";}).length;
+    document.getElementById("navContent").textContent=state.contents.length;
+    document.getElementById("navStudent").textContent=state.students.length;
+    document.getElementById("navArt").textContent=state.artworks.length;
+    document.getElementById("navProj").textContent=state.projects.length;
+    document.getElementById("navBook").textContent=state.bookChapters.length;
+    renderDashboard();
+    renderCockpit();
+    renderList("contents");renderList("students");renderList("artworks");renderList("projects");renderList("book");renderList("knowledge");
+    renderFilters();
+    renderAI();
+  }
+
+  load();render();
+})();
+</script>
+</body>
+</html>
