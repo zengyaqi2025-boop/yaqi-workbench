@@ -37,7 +37,7 @@
 3. 左侧 **SQL Editor** → 新建查询 → 粘贴仓库里的 `supabase-setup.sql` 全部内容 → **Run**。
 4. 左侧 **Project Settings → API**，复制：
    - `Project URL`（形如 `https://xxxx.supabase.co`）
-   - `anon public` 密钥（以 `eyJ` 开头）
+   - `anon public` / `publishable` 密钥（新版为 `sb_publishable_` 开头；老版为 `eyJ` 开头）
 5. 打开工作台顶栏「☁ 同步」→ 勾选启用 → 填入 URL / anon 密钥 / 表名（默认 `yaqi_workbench`）→ 点「测试并保存」→「立即同步」。
 
 配置完成后，任意设备打开同一网址都会自动拉取同一份数据。

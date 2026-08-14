@@ -277,9 +277,9 @@
     <p style="font-size:12px;color:var(--muted);margin:0 0 12px">开启后，数据与 Supabase 云端同步，电脑 / 手机 / 未来团队看同一份。需先建一个免费的 Supabase 项目并建表（步骤见下）。</p>
     <div class="field"><label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer"><input type="checkbox" id="syncOn" style="width:auto"> 启用云端同步</label></div>
     <div class="field"><label>Supabase 项目 URL</label><input id="syncUrl" placeholder="https://xxxx.supabase.co"></div>
-    <div class="field"><label>Anon 公开密钥</label><input id="syncAnon" placeholder="eyJhbGciOi..."></div>
+    <div class="field"><label>发布密钥 (publishable)</label><input id="syncAnon" placeholder="sb_publishable_..."></div>
     <div class="field"><label>数据表名</label><input id="syncTable" value="yaqi_workbench"></div>
-    <div class="hint" style="margin-bottom:10px;line-height:1.7">建表 SQL（在 Supabase → SQL Editor 执行）：<br>create table yaqi_workbench (<br>&nbsp;&nbsp;id text primary key,<br>&nbsp;&nbsp;state text,<br>&nbsp;&nbsp;updated_at timestamptz default now()<br>);<br>并开启该表的「Row Level Security」后给 anon 角色增删改权限（或用 Service Key —— 仅自用推荐前者）。</div>
+    <div class="hint" style="margin-bottom:10px;line-height:1.7">✅ 你的项目 URL 与发布密钥已预填并启用。还差一步：在 Supabase → SQL Editor 执行下面建表 SQL（粘贴 Run 即可），之后刷新工作台即自动同步。<br><br>建表 SQL：<br>create table yaqi_workbench (<br>&nbsp;&nbsp;id text primary key,<br>&nbsp;&nbsp;state text,<br>&nbsp;&nbsp;updated_at timestamptz default now()<br>);<br>并开启该表的「Row Level Security」后给 anon 角色增删改权限（或用 Service Key —— 仅自用推荐前者）。</div>
     <div id="syncMsg" style="font-size:12px;margin-bottom:8px"></div>
     <div class="modalbtns">
       <button class="btn" id="syncTest">测试并保存</button>
@@ -435,7 +435,7 @@
 
   /* ---------- storage：本地优先 + 可选云端同步 ---------- */
   var CFGKEY="yaqi_cfg_v1";
-  function loadCfg(){try{return JSON.parse(localStorage.getItem(CFGKEY))||{sync:{enabled:false,url:"",anon:"",table:"yaqi_workbench"}};}catch(e){return {sync:{enabled:false,url:"",anon:"",table:"yaqi_workbench"}};}}
+  function loadCfg(){try{return JSON.parse(localStorage.getItem(CFGKEY))||{sync:{enabled:true,url:"https://yccnnygmkvkrnvaxirrg.supabase.co",anon:"sb_publishable_0TMEoRDLZAP0xj5y0MaaPg_LlDIPasi",table:"yaqi_workbench"}};}catch(e){return {sync:{enabled:true,url:"https://yccnnygmkvkrnvaxirrg.supabase.co",anon:"sb_publishable_0TMEoRDLZAP0xj5y0MaaPg_LlDIPasi",table:"yaqi_workbench"}};}}
   function saveCfg(c){try{localStorage.setItem(CFGKEY,JSON.stringify(c));}catch(e){}}
   var cfg=loadCfg();
   var sbClient=null;
