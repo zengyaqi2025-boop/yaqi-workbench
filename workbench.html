@@ -134,6 +134,29 @@
   ::-webkit-scrollbar{width:9px;height:9px}
   ::-webkit-scrollbar-thumb{background:#d8d0c2;border-radius:9px}
   ::-webkit-scrollbar-track{background:transparent}
+  /* 游戏化条 */
+  .gamebar{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin:14px 0 6px}
+  .gcard{flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+  .gcard .gl{font-size:11px;color:var(--muted)}
+  .gcard .gv{font-size:21px;font-weight:800;color:var(--ink);line-height:1.1}
+  .gcard .gv small{font-size:12px;font-weight:500;color:var(--muted)}
+  .gstreak .gv{color:var(--orange)}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+  .bchip{font-size:12px;padding:3px 9px;border-radius:20px;background:var(--terra-soft);color:var(--terra);border:1px solid var(--line);white-space:nowrap}
+  .bchip.locked{background:#f1eee8;color:#bdb6aa;border-color:transparent}
+  /* 目标驾驶舱 */
+  .goalhorizon{margin:18px 0 4px}
+  .goalhorizon h3{font-size:14px;color:var(--muted);font-weight:600;margin:0 0 9px;display:flex;align-items:center;gap:8px}
+  .goalhorizon h3 .ht{font-size:11px;background:var(--ink);color:#fff;padding:1px 9px;border-radius:20px;font-weight:600}
+  .goalcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:11px;cursor:pointer}
+  .goalcard:hover{border-color:var(--terra)}
+  .goalcard .gtitle{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .goalcard .gstat{font-size:11px;padding:1px 8px;border-radius:20px;background:var(--terra-soft);color:var(--terra)}
+  .goalcard .gwhy{font-size:12px;color:var(--muted);margin:7px 0 9px;line-height:1.65}
+  .goalbar{height:9px;border-radius:9px;background:#ece4d6;overflow:hidden}
+  .goalbar>i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--terra),var(--conv))}
+  .goalmeta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:7px}
+  .empty.goals{color:var(--muted);font-size:13px;padding:18px 0;text-align:center}
   @media(max-width:720px){
     .hamb{display:flex}
     .topdate{display:none}
@@ -174,6 +197,7 @@
       <div class="navitem" data-view="students"><span class="ic">🎓</span><span class="txt">课程·学员中心</span><span class="badge" id="navStudent">0</span></div>
       <div class="navitem" data-view="artworks"><span class="ic">🎨</span><span class="txt">艺术作品中心</span><span class="badge" id="navArt">0</span></div>
       <div class="navitem" data-view="projects"><span class="ic">🚀</span><span class="txt">项目·事业运营</span><span class="badge" id="navProj">0</span></div>
+      <div class="navitem" data-view="goals"><span class="ic">🎯</span><span class="txt">目标驾驶舱</span><span class="badge" id="navGoal">0</span></div>
       <div class="navitem" data-view="book"><span class="ic">📖</span><span class="txt">写书</span><span class="badge" id="navBook">0</span></div>
       <div class="navsep"></div>
       <div class="navitem" data-view="knowledge"><span class="ic">🧠</span><span class="txt">知识库</span></div>
@@ -186,6 +210,7 @@
       <section class="view active" id="view-dashboard">
         <div class="viewhead"><h2>今日指挥台</h2><p>打开就知道今天该干什么</p></div>
         <div class="overview" id="overview"></div>
+        <div class="gamebar" id="gamebar"></div>
         <div class="top3">
           <h3>🔆 今日 TOP 3</h3>
           <div id="top3list"></div>
@@ -229,6 +254,13 @@
         <div class="viewhead"><h2>写书</h2><p>长期创作，不与普通项目混</p>
           <button class="addbtn" data-add="book">+ 新建章节</button></div>
         <div class="cards" id="listBook"></div>
+      </section>
+
+      <!-- 目标驾驶舱 -->
+      <section class="view" id="view-goals">
+        <div class="viewhead"><h2>🎯 目标驾驶舱</h2><p>北极星 → 年度 → 季度 → 月度，层层下钻，让每天不偏航</p>
+          <button class="addbtn" data-add="goals">+ 新建目标</button></div>
+        <div id="goalTree"></div>
       </section>
 
       <!-- 知识库 -->
@@ -323,6 +355,8 @@
     "想法":"var(--gray)","待启动":"var(--yellow)","进行中":"var(--blue)","等待":"var(--orange)","完成":"var(--green)","暂停":"var(--muted)",
     "灵感池":"var(--gray)","目录":"var(--blue)","待写":"var(--yellow)","写作中":"var(--orange)","初稿完成":"var(--blue)","修改":"var(--terra)","定稿":"var(--green)"
   };
+  var GOAL_HORIZONS=["北极星目标","年度目标","季度目标","月度目标"];
+  STATUS.goals=["进行中","已达成","暂停"];
   // 表单配置：card=卡片显示字段, fields=编辑字段
   var FORMS={
     tasks:{titleKey:"title",card:["ownerModule","project","priority","dueDate","nextAction"],
@@ -334,7 +368,8 @@
         {k:"dueDate",l:"截止日期",t:"date"},
         {k:"status",l:"状态",t:"select",o:STATUS.tasks},
         {k:"nextAction",l:"下一步行动",t:"text"},
-        {k:"relatedLinks",l:"关联资料(链接/说明)",t:"text"}
+        {k:"relatedLinks",l:"关联资料(链接/说明)",t:"text"},
+        {k:"goalId",l:"关联目标(填目标名称)",t:"text"}
       ]},
     contents:{titleKey:"title",card:["form","platform","status","publishTime","fans","convert"],
       fields:[
@@ -393,6 +428,17 @@
         {k:"progress",l:"当前进度(%)",t:"number"},
         {k:"nextAction",l:"下一步行动(必填)",t:"text",req:1}
       ]},
+    goals:{titleKey:"title",card:["horizon","status","progress","why","deadline"],
+      fields:[
+        {k:"title",l:"目标名称",t:"text",req:1},
+        {k:"horizon",l:"层级",t:"select",o:["北极星目标","年度目标","季度目标","月度目标"]},
+        {k:"parent",l:"上级目标(填名称)",t:"text"},
+        {k:"status",l:"状态",t:"select",o:STATUS.goals},
+        {k:"progress",l:"完成进度(%)",t:"number"},
+        {k:"deadline",l:"截止日期",t:"date"},
+        {k:"why",l:"为什么重要",t:"textarea"},
+        {k:"linked",l:"关联说明/关键结果",t:"text"}
+      ]},
     book:{titleKey:"title",card:["part","theme","status","wordCount","targetWords"],
       fields:[
         {k:"title",l:"章节名称",t:"text",req:1},
@@ -417,7 +463,7 @@
     {key:"项目管家",icon:"🚀",desc:"输入一个目标 → 项目目标、关键节点、任务拆解、优先级、截止建议、最重要下一步"},
     {key:"艺术作品策展助手",icon:"🎨",desc:"作品图+原始感受 → 命名、关键词、解析、自述、展览文字、销售呈现、朋友圈、小红书"}
   ];
-  var state={tasks:[],contents:[],students:[],artworks:[],projects:[],bookChapters:[],knowledge:[],aiThreads:[]};
+  var state={tasks:[],contents:[],students:[],artworks:[],projects:[],bookChapters:[],knowledge:[],goals:[],aiThreads:[]};
   var current={view:"dashboard",editing:null,filter:null};
 
   /* ---------- helpers ---------- */
@@ -514,6 +560,11 @@
     state.knowledge=[
       {id:uid(),title:"我的事业公开版 Context",category:"事业Context",content:"艺术疗愈师×教育人，围绕艺术×疗愈×教育×AI，服务孩子与妈妈。",tags:"定位,AI觉知圈"},
       {id:uid(),title:"亲子艺术疗愈方法论",category:"可复用方法论",content:"无错线条→自由表达→情绪命名→作品对话，四步法。",tags:"疗愈,亲子"}
+    ];
+    state.goals=[
+      {id:uid(),title:"成为孩子与妈妈信赖的艺术疗愈引路人",horizon:"北极星目标",parent:"",status:"进行中",progress:35,deadline:"",why:"这是我全部事业的核心：用艺术×疗愈×教育×AI，真正帮到孩子与妈妈。",linked:""},
+      {id:uid(),title:"本年度把 AI觉知圈做成可复制的社群产品",horizon:"年度目标",parent:"成为孩子与妈妈信赖的艺术疗愈引路人",status:"进行中",progress:40,deadline:"",why:"社群是我低门槛影响更多家庭的关键载体。",linked:""},
+      {id:uid(),title:"本季度视频号涨粉到 3 万、沉淀 10 条爆款",horizon:"季度目标",parent:"本年度把 AI觉知圈做成可复制的社群产品",status:"进行中",progress:45,deadline:"",why:"视频号已是破万粉的获客主阵地，继续放大。",linked:""}
     ];
     state.aiThreads=[];
   }
@@ -703,7 +754,70 @@
     document.getElementById("formFields").innerHTML=html;
     mask.classList.add("show");
   }
-  function kindName(k){return {tasks:"行动",contents:"内容",students:"学员",artworks:"作品",projects:"项目",book:"章节",knowledge:"知识"}[k]||"";}
+  function kindName(k){return {tasks:"行动",contents:"内容",students:"学员",artworks:"作品",projects:"项目",goals:"目标",book:"章节",knowledge:"知识"}[k]||"";}
+  function levelFromDone(d){if(d>=100)return 5;if(d>=50)return 4;if(d>=25)return 3;if(d>=10)return 2;return 1;}
+  var LEVEL_NAME={1:"起步",2:"进阶",3:"笃行",4:"精通",5:"大师"};
+  function loadGame(){try{return JSON.parse(localStorage.getItem("yaqi_game_v1"))||{totalDone:0,streak:0,lastDay:"",level:1};}catch(e){return {totalDone:0,streak:0,lastDay:"",level:1};}}
+  function saveGame(g){try{localStorage.setItem("yaqi_game_v1",JSON.stringify(g));}catch(e){}}
+  function updateGame(){
+    var g=loadGame();
+    var done=state.tasks.filter(function(t){return t.status==="已完成";}).length
+      +state.projects.filter(function(p){return p.status==="完成";}).length
+      +state.bookChapters.filter(function(b){return b.status==="定稿";}).length;
+    g.totalDone=done;
+    var today=fmtDate(todayMid());
+    var y=new Date(todayMid().getTime()-86400000);var ystr=fmtDate(y);
+    if(g.lastDay===today){}else if(g.lastDay===ystr){g.streak=(g.streak||0)+1;}else{g.streak=1;}
+    g.lastDay=today;g.level=levelFromDone(done);saveGame(g);return g;
+  }
+  function allBadges(g){
+    var fansAll=0;state.contents.forEach(function(c){fansAll+=num(c.fans);});
+    var break10k=state.contents.some(function(c){return (c.milestone&&c.milestone.indexOf("1万粉")>=0)||fansAll>=10000;});
+    return [
+      {key:"起航",icon:"🎯",name:"方向已定",ok:state.goals.length>0},
+      {key:"首战",icon:"✅",name:"首战告捷",ok:g.totalDone>=1},
+      {key:"连击",icon:"🔥",name:"七日不断",ok:g.streak>=7},
+      {key:"十全",icon:"💪",name:"十全十美",ok:g.totalDone>=10},
+      {key:"破万",icon:"🏅",name:"涨粉破万",ok:break10k},
+      {key:"著书",icon:"📖",name:"著书立说",ok:state.bookChapters.length>0}
+    ];
+  }
+  function renderGamebar(){
+    var box=document.getElementById("gamebar");if(!box)return;
+    var g=loadGame();var badges=allBadges(g);
+    box.innerHTML=
+      '<div class="gcard"><div class="gl">等级</div><div class="gv">Lv'+g.level+'<small> · '+LEVEL_NAME[g.level]+'</small></div></div>'+
+      '<div class="gcard gstreak"><div class="gl">连续打卡</div><div class="gv">🔥 '+g.streak+'<small> 天</small></div></div>'+
+      '<div class="gcard" style="flex:2;min-width:220px"><div class="gl">成就徽章（'+badges.filter(function(b){return b.ok;}).length+'/'+badges.length+'）</div><div class="badges">'+
+        badges.map(function(b){return '<span class="bchip'+(b.ok?"":" locked")+'">'+(b.ok?b.icon+" ":"🔒 ")+b.name+'</span>';}).join("")+
+      '</div></div>';
+  }
+  function renderGoals(){
+    var box=document.getElementById("goalTree");if(!box)return;
+    if(!state.goals.length){box.innerHTML='<div class="empty goals">还没有目标。点右上角「+ 新建目标」，先立一个北极星目标 🎯<br>之后年度 / 季度 / 月度都能往下挂。</div>';return;}
+    var html="";
+    GOAL_HORIZONS.forEach(function(h){
+      var gs=state.goals.filter(function(g){return g.horizon===h;});
+      if(!gs.length)return;
+      html+='<div class="goalhorizon"><h3><span class="ht">'+h+'</span> '+gs.length+' 个</h3>';
+      gs.forEach(function(g){
+        var prog=Math.max(0,Math.min(100,num(g.progress)));
+        var linked=state.tasks.filter(function(t){return t.goalId===g.title;}).length;
+        var why=g.why?('<div class="gwhy">'+esc(g.why)+'</div>'):"";
+        html+='<div class="goalcard" data-edit="goals" data-id="'+g.id+'">'+
+          '<div class="gtitle">'+esc(g.title)+
+            (g.status?'<span class="gstat">'+esc(g.status)+'</span>':'')+
+          '</div>'+
+          why+
+          '<div class="goalbar"><i style="width:'+prog+'%"></i></div>'+
+          '<div class="goalmeta"><span>进度 '+prog+'%'+(g.deadline?' · 截止 '+relLabel(g.deadline):'')+'</span><span>'+(linked?('关联任务 '+linked+' 项'):'暂无关联任务')+'</span></div>'+
+        '</div>';
+      });
+      html+='</div>';
+    });
+    box.innerHTML=html;
+    box.querySelectorAll("[data-edit]").forEach(function(el){el.onclick=function(){openModal("goals",findById("goals",el.dataset.id));};});
+  }
   function closeModal(){mask.classList.remove("show");current.editing=null;}
   document.getElementById("btnCancel").onclick=closeModal;
   mask.addEventListener("click",function(e){if(e.target===mask)closeModal();});
@@ -898,11 +1012,14 @@
     document.getElementById("navArt").textContent=state.artworks.length;
     document.getElementById("navProj").textContent=state.projects.length;
     document.getElementById("navBook").textContent=state.bookChapters.length;
+    document.getElementById("navGoal").textContent=state.goals.length;
+    updateGame();renderGamebar();
     renderDashboard();
     renderCockpit();
     renderList("contents");renderList("students");renderList("artworks");renderList("projects");renderList("book");renderList("knowledge");
     renderFilters();
     renderAI();
+    renderGoals();
   }
 
   load();render();
